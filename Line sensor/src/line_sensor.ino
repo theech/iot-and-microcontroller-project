@@ -1,7 +1,7 @@
 /*
- * @autor: Tee Hunter
+ * @author: Tee Hunter
  * @name of Project: Line sensor (Testing with black line and white floor) 
- * @duration: 14:01
+ * @duration: 14:01 - 05/25/2018
  * @lacation: Iot House
  */
 
