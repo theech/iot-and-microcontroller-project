@@ -1,14 +1,29 @@
+// AUTOMATICALLY GENERATED FILE. PLEASE DO NOT MODIFY IT MANUALLY
+
+// PIO Unified Debugger
+//
+// Documentation: http://docs.platformio.org/page/plus/debugging.html
+// Configuration: http://docs.platformio.org/page/projectconf/section_env_debug.html
+
 {
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "gdb",
+            "type": "platformio-debug",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
             "name": "PlatformIO Debugger",
-            "target": "c:/Users/theec/Documents/PlatformIO/Internet of Things with Arduino/Light Sensor With LCD/.pioenvs/uno/firmware.elf",
-            "gdbpath": "C:/Users/theec/.platformio/penv/Scripts/piodebuggdb",
-            "autorun": [ "source .pioinit" ]
+            "executable": "c:/Users/theec/Documents/PlatformIO/Internet of Things with Arduino/Light Sensor With LCD/.pioenvs/uno/firmware.elf",
+            "toolchainBinDir": "C:/Users/theec/.platformio/packages/toolchain-atmelavr/bin",
+            "preLaunchTask": "PlatformIO: Pre-Debug",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PlatformIO Debugger (Skip Pre-Debug)",
+            "executable": "c:/Users/theec/Documents/PlatformIO/Internet of Things with Arduino/Light Sensor With LCD/.pioenvs/uno/firmware.elf",
+            "toolchainBinDir": "C:/Users/theec/.platformio/packages/toolchain-atmelavr/bin",
+            "internalConsoleOptions": "openOnSessionStart"
         }
     ]
 }
