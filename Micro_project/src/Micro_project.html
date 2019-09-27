@@ -1,55 +1,58 @@
 <!DOCTYPE html>
 <html>
+
 <body>
-<center>
-<script src="https://cdn.netpie.io/microgear.js"></script>
-<script>
-  const APPID = "MicroControllerProject2019";
-  const KEY = "eoqRedWUPrExw4D";
-  const SECRET = "FmxN7MJ23u4CoG2GifnmOzd4D";
+  <center>
+    <script src="https://cdn.netpie.io/microgear.js"></script>
+    <script>
+      const APPID = "ProjectName";
+      const KEY = "SessionKey";
+      const SECRET = "SessionSecret";
 
-  const ALIAS = "HTML_web";        
-  const thing1 = "NodeMCU1";      
-  
-  var microgear = Microgear.create({
-    key: KEY,
-    secret: SECRET,
-    alias : ALIAS
-  });
+      const ALIAS = "HTML_web";
+      const thing1 = "NodeMCU1";
 
-  microgear.on('message',function(topic,msg) {
-    document.getElementById("raw_data").innerHTML = "Data from Node MCU = " + msg;
-    document.getElementById("get_topic").innerHTML = "Topic = " + topic;
-    var split_msg = msg.split("/"); //String data = "/" +String(Humidity) + "/" + String(Temp);
-    console.log(msg);  // for debug
-    if(typeof(split_msg[0])!='undefined' && split_msg[0]==""){
-      document.getElementById("Humidity_temp").innerHTML = "Humidity = " + split_msg[1] + " % ,Temp = " + split_msg[2] + " c";
-    }
-  });
+      var microgear = Microgear.create({
+        key: KEY,
+        secret: SECRET,
+        alias: ALIAS
+      });
 
-  microgear.on('connected', function() {
-    microgear.setAlias(ALIAS);
-    document.getElementById("connected_NETPIE").innerHTML = "Microcontroller Project 2019"
-  });
+      microgear.on('message', function (topic, msg) {
+        document.getElementById("raw_data").innerHTML = "Data from Node MCU = " + msg;
+        document.getElementById("get_topic").innerHTML = "Topic = " + topic;
+        var split_msg = msg.split("/"); //String data = "/" +String(Humidity) + "/" + String(Temp);
+        console.log(msg); // for debug
+        if (typeof (split_msg[0]) != 'undefined' && split_msg[0] == "") {
+          document.getElementById("Humidity_temp").innerHTML = "Humidity = " + split_msg[1] + " % ,Temp = " +
+            split_msg[2] + " c";
+        }
+      });
 
-  microgear.on('present', function(event) {
-    console.log(event);
-  });
+      microgear.on('connected', function () {
+        microgear.setAlias(ALIAS);
+        document.getElementById("connected_NETPIE").innerHTML = "Microcontroller Project 2019"
+      });
 
-  microgear.on('absent', function(event) {
-    console.log(event);
-  });
+      microgear.on('present', function (event) {
+        console.log(event);
+      });
 
-  microgear.resettoken(function(err) {
-    microgear.connect(APPID);
-  });
-</script>
+      microgear.on('absent', function (event) {
+        console.log(event);
+      });
 
-<h1 id="connected_NETPIE"></h1>
-<p id="raw_data"></p>
-<p id="get_topic"></p>
-<strong id="Humidity_temp"></strong>
+      microgear.resettoken(function (err) {
+        microgear.connect(APPID);
+      });
+    </script>
 
-</center>
+    <h1 id="connected_NETPIE"></h1>
+    <p id="raw_data"></p>
+    <p id="get_topic"></p>
+    <strong id="Humidity_temp"></strong>
+
+  </center>
 </body>
+
 </html>
