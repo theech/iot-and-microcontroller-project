@@ -16,6 +16,8 @@ SoftwareSerial mySerial(19, 18); // RX, TX Mega
 
 String strInH;
 String strInT;
+String strOutH;
+String strOutT;
 
 // Define status variable to stall the realtime data from inDHT & outDHT
 float inHumdStatus = .0;
@@ -90,7 +92,11 @@ void loop()
   strInH = String('H') + String(inHumdStatus);
   strInT = String('T') + String(inTempStatus);
 
+  strOutH = String('I') + String(outHumdStatus);
+  strOutT = String('U') + String(outTempStatus);
+
   mySerial.println(strInH);
-  //mySerial.println("----");
   mySerial.println(strInT);
+  mySerial.println(strOutH);
+  mySerial.println(strOutT);
 }

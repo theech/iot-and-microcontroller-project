@@ -35,10 +35,10 @@ void loop()
       if (inChar == 0x0D) // check received 'enter' (0x0D)
       {
 
-        int Level = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48); // change Char to Integer
+        int inHumd = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48); // change Char to Integer
 
-        Serial.print("Humidity: ");
-        Serial.println(Level);
+        Serial.print("inHumd: ");
+        Serial.print(inHumd);
 
         MyinputString = "";
       }
@@ -49,10 +49,38 @@ void loop()
       if (inChar == 0x0D) // check received 'enter' (0x0D)
       {
 
-        int Level = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48);
+        int inTemp = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48);
 
-        Serial.print("Temperature: ");
-        Serial.println(Level);
+        Serial.print("\t inTemp: ");
+        Serial.println(inTemp);
+
+        MyinputString = "";
+      }
+    }
+    else if (MyinputString[0] == 'I') // check array [0] is I
+    {
+
+      if (inChar == 0x0D) // check received 'enter' (0x0D)
+      {
+
+        int outHumd = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48);
+
+        Serial.print("OutHumd: ");
+        Serial.print(outHumd);
+
+        MyinputString = "";
+      }
+    }
+    else if (MyinputString[0] == 'U') // check array [0] is U
+    {
+
+      if (inChar == 0x0D) // check received 'enter' (0x0D)
+      {
+
+        int OutTemp = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48);
+
+        Serial.print("\t OutTemp: ");
+        Serial.println(OutTemp);
 
         MyinputString = "";
       }
