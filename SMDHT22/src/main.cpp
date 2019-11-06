@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include "DHT.h"
 #include <Adafruit_Sensor.h>
+#include <SoftwareSerial.h>
+
+SoftwareSerial mySerial(19, 18); // RX, TX Mega
 
 #define inDHT 8 // what digital pin we're connected to
 #define outDHT 9
@@ -11,12 +14,14 @@
 #define outDHTTYPE DHT22
 //#define DHTTYPE DHT21   // DHT 21 (AM2301)
 
+String strInH;
+String strInT;
+
 // Define status variable to stall the realtime data from inDHT & outDHT
 float inHumdStatus = .0;
 float outHumdStatus = .0;
 float inTempStatus = .0;
 float outTempStatus = .0;
-
 
 // Connect pin 1 (on the left) of the sensor to +5V
 // NOTE: If using a board with 3.3V logic like an Arduino Due connect pin 1
@@ -35,8 +40,9 @@ DHT dht2(outDHT, outDHTTYPE);
 void setup()
 {
   Serial.begin(115200);
+  mySerial.begin(115200);
+  Serial.println("SMART MELON FARM");
   Serial.println("DHTxx test!");
-
   dht1.begin();
   dht2.begin();
 }
@@ -80,4 +86,11 @@ void loop()
   Serial.print("Outside Temperature: \t");
   Serial.print(outTempStatus);
   Serial.println(" *C ");
+
+  strInH = String('H') + String(inHumdStatus);
+  strInT = String('T') + String(inTempStatus);
+
+  mySerial.println(strInH);
+  //mySerial.println("----");
+  mySerial.println(strInT);
 }
