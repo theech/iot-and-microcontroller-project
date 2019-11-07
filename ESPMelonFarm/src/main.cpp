@@ -10,6 +10,15 @@ SoftwareSerial swSer(14, 12, false, 256); // 14 = D5(RX) ; 12 = D6(TX) NodeMCU
 String MyinputString = "";
 char inChar;
 
+// in and out humd, temp variable
+int inHumd = 0;
+int inTemp = 0;
+int outHumd = 0;
+int outTemp = 0;
+
+// call function
+void debuging();
+
 void setup()
 {
   // Open serial communications and wait for port to open:
@@ -24,6 +33,9 @@ void setup()
 
 void loop()
 { // run over and over
+  // print to serial monitor
+  debuging();
+
   while (swSer.available())
   {
     inChar = (char)swSer.read(); // get the new byte:
@@ -34,54 +46,31 @@ void loop()
     {
       if (inChar == 0x0D) // check received 'enter' (0x0D)
       {
-
-        int inHumd = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48); // change Char to Integer
-
-        Serial.print("inHumd: ");
-        Serial.print(inHumd);
-
+        inHumd = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48); // change Char to Integer
         MyinputString = "";
       }
     }
     else if (MyinputString[0] == 'T') // check array [0] is T
     {
-
       if (inChar == 0x0D) // check received 'enter' (0x0D)
       {
-
-        int inTemp = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48);
-
-        Serial.print("\t inTemp: ");
-        Serial.println(inTemp);
-
+        inTemp = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48);
         MyinputString = "";
       }
     }
     else if (MyinputString[0] == 'I') // check array [0] is I
     {
-
       if (inChar == 0x0D) // check received 'enter' (0x0D)
       {
-
-        int outHumd = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48);
-
-        Serial.print("OutHumd: ");
-        Serial.print(outHumd);
-
+        outHumd = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48);
         MyinputString = "";
       }
     }
     else if (MyinputString[0] == 'U') // check array [0] is U
     {
-
       if (inChar == 0x0D) // check received 'enter' (0x0D)
       {
-
-        int OutTemp = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48);
-
-        Serial.print("\t OutTemp: ");
-        Serial.println(OutTemp);
-
+        outTemp = ((MyinputString[1] - 48) * 10) + (MyinputString[2] - 48);
         MyinputString = "";
       }
     }
@@ -90,4 +79,19 @@ void loop()
       MyinputString = "";
     }
   }
+}
+
+// debuging monitor
+void debuging()
+{
+  Serial.print("inHumd: ");
+  Serial.print(inHumd);
+  Serial.print("\t inTemp: ");
+  Serial.println(inTemp);
+  Serial.print("OutHumd: ");
+  Serial.print(outHumd);
+  Serial.print("\t OutTemp: ");
+  Serial.println(outTemp);
+
+  delay(2000);
 }
