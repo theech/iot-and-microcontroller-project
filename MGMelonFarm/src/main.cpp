@@ -2,7 +2,7 @@
 #include "DHT.h"
 #include <Adafruit_Sensor.h>
 // what digital pin we're connected to
-#define inDHT 8 
+#define inDHT 8
 #define outDHT 9
 // Uncomment whatever type you're using!
 //#define DHTTYPE DHT11   // DHT 11
@@ -18,23 +18,32 @@
 #define moisPin1 A1
 #define moisPin2 A2
 // Define status variable to stall the realtime data from inDHT & outDHT
-float inHumdStatus = .0;
-float outHumdStatus = .0;
-float inTempStatus = .0;
-float outTempStatus = .0;
+int inHumdStatus = 0;
+int outHumdStatus = 0;
+int inTempStatus = 0;
+int outTempStatus = 0;
 // inLightStaus and outLightStatus are Read value from sensor directly.
-unsigned int inLightStatus = 0;
-unsigned int outLightStatus = 0;
+int inLightStatus = 0;
+int outLightStatus = 0;
 // Standard photoresistor value is 1024 that mean it will start from 0 to 1023
 int lightMin = 0;
 int lightMax = 1023;
 // define status variable to stall the realtime data form moisture sensor 1, 2, and 3;]
-float moisStatus0 = .0;
-float moisStatus1 = .0;
-float moisStatus2 = .0;
+int moisStatus0 = 0;
+int moisStatus1 = 0;
+int moisStatus2 = 0;
 // Sending str to Nodemcu
-String str;
-
+// String str;
+// Communication String
+String strInH;
+String strInT;
+String strOutH;
+String strOutT;
+String strInLig;
+String strOutLig;
+String strMois0;
+String strMois1;
+String strMois2;
 // as the current DHT reading algorithm adjusts itself to work on faster procs.
 DHT dht1(inDHT, inDHTTYPE);
 DHT dht2(outDHT, outDHTTYPE);
@@ -49,7 +58,7 @@ void setup()
 {
   Serial.begin(115200);
   Serial1.begin(115200);
-  Serial.println("Smart Melon Farm");
+  Serial.println("Smart Melon Farm [MEGE]");
   // DHT22 begin
   dht1.begin();
   dht2.begin();
@@ -77,7 +86,8 @@ void loop()
 }
 
 // humidity and Temperature function
-void humidTemp() {
+void humidTemp()
+{
   // Reading temperature or humidity takes about 250 milliseconds!
   // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
   inHumdStatus = dht1.readHumidity();
@@ -85,7 +95,7 @@ void humidTemp() {
   // Read temperature as Celsius (the default)
   inTempStatus = dht1.readTemperature();
   outTempStatus = dht2.readTemperature();
-  
+
   // Check if any reads failed and exit early (to try again).
   if (isnan(inHumdStatus) || isnan(inTempStatus))
   {
@@ -98,44 +108,53 @@ void humidTemp() {
     return;
   }
 
+  Serial.println("\t\t\tSmart Melon Farm [MEGE]");
+  Serial.println("------------------------------------------------------------------------");
+
   // show in MG module as realtime
   Serial.print("Inside Humidity: \t");
   Serial.print(inHumdStatus);
   Serial.print(" %\t|\t");
   Serial.print("Inside Temperature: \t");
   Serial.print(inTempStatus);
-  Serial.println(" *C ");
-  Serial.println("------------------------------------------------------------------------");
+  Serial.println(" *C\t|");
   Serial.print("Outside Humidity: \t");
   Serial.print(outHumdStatus);
   Serial.print(" %\t|\t");
   Serial.print("Outside Temperature: \t");
   Serial.print(outTempStatus);
-  Serial.println(" *C ");
+  Serial.println(" *C\t|");
   Serial.println("------------------------------------------------------------------------");
 }
 
 // photoresistor function
-void photoresis() {
-   // Reading the value from sensor directly.
+void photoresis()
+{
+  // Reading the value from sensor directly.
   inLightStatus = analogRead(inLight);
   outLightStatus = analogRead(outLight);
   // if inLightStatus is less than 0, set it equal 0, but if greater than 1023 set it equal 1023
-  if (inLightStatus < lightMin)  inLightStatus = lightMin;
-  else if (inLightStatus > lightMax)  inLightStatus = lightMax;
+  if (inLightStatus < lightMin)
+    inLightStatus = lightMin;
+  else if (inLightStatus > lightMax)
+    inLightStatus = lightMax;
   // if outLightstatus is less than 0, set it equal 0, but if greater than 1023, set it equal 1023
-  if (outLightStatus < lightMin)  outLightStatus = lightMin;
-  else if (outLightStatus > lightMax)  outLightStatus = lightMax;
+  if (outLightStatus < lightMin)
+    outLightStatus = lightMin;
+  else if (outLightStatus > lightMax)
+    outLightStatus = lightMax;
   // showing status in monitor
   Serial.print("Inside Light: \t\t");
   Serial.print(inLightStatus);
   Serial.print("\t|\tOutside Light: \t\t");
-  Serial.println(outLightStatus);
+  Serial.print(outLightStatus);
+  Serial.println("\t|");
   Serial.println("------------------------------------------------------------------------");
 }
 
 // Soil moisture function
-void soilMoisture() {
+void soilMoisture()
+{
   // reading data from each moisture sensors directly
   moisStatus0 = analogRead(moisPin0);
   moisStatus1 = analogRead(moisPin1);
@@ -155,26 +174,27 @@ void soilMoisture() {
 }
 
 // Serial Communication function
-void comnuni() {
-  str = String("Inside Humidity: \t") 
-        +String(inHumdStatus)
-        +String("\t|\tInside Temperature: \t")
-        +String(inTempStatus)
-        +String("\t|\nOutside Humidity: \t")
-        +String(outHumdStatus)
-        +String("\t|\tOutside Temperature: \t")
-        +String(outHumdStatus)
-        +String("\t|\nInside Light: \t\t")
-        +String(inLightStatus)
-        +String("\t|\tOutside Light: \t\t")
-        +String(outLightStatus)
-        +String("\t|\nSoil moisture one: \t")
-        +String(moisStatus0)
-        +String("\t|\tSoil moisture two: \t")
-        +String(moisStatus1)
-        +String("\t|\tSoil moisture three: \t")
-        +String(moisStatus2)
-        +String("\n--------------------------------------------------------------------------------------------------------------");
-
-  Serial1.println(str);
+void comnuni()
+{
+  // in and out dht communication sending string
+  strInH = String('H') + String(inHumdStatus);
+  strInT = String('T') + String(inTempStatus);
+  strOutH = String('I') + String(outHumdStatus);
+  strOutT = String('U') + String(outTempStatus);
+  Serial1.println(strInH);
+  Serial1.println(strInT);
+  Serial1.println(strOutH);
+  Serial1.println(strOutT);
+  // in and out light communication sending string
+  strInLig = String('L') + String(inLightStatus);
+  strOutLig = String('M') + String(outLightStatus);
+  Serial1.println(strInLig);
+  Serial1.println(strOutLig);
+  //mois 1, 2, and 3 communication sending string
+  strMois0 = String('N') + String(moisStatus0);
+  strMois1 = String('O') + String(moisStatus1);
+  strMois2 = String('P') + String(moisStatus2);
+  Serial1.println(strMois0);
+  Serial1.println(strMois1);
+  Serial1.println(strMois2);
 }
