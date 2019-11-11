@@ -93,7 +93,6 @@ void setup()
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-  digitalWrite(D0, LOW);
 
   microgear.init(KEY, SECRET, ALIAS);
   microgear.connect(APPID);
@@ -235,11 +234,10 @@ void netpieCon()
       data += mois2;
       data += "}";
 
-
-      // Showing Gauage on Freeboard
-      // String str = (String)inHumd + ", " + (String)inTemp + ", " + (String)inLight + ", " + (String)outHumd + ", " + (String)outTemp + ", " + (String)outLight + ", " + (String)mois0 + ", " + (String)mois1 + ", " + (String)mois2 + ", ";
-      // microgear.publish(FREEBOARDID, str);
-      // Serial.println(str);
+      //sending data to freeboard
+      String str = (String)inHumd + ", " + (String)inTemp + ", " + (String)inLight + ", " + (String)outHumd + ", " + (String)outTemp + ", " + (String)outLight + ", " + (String)mois0 + ", " + (String)mois1 + ", " + (String)mois2 + ", ";
+      microgear.publish("/sensors",str);
+      Serial.println(str);
 
       if (isnan(inHumd) || isnan(inTemp) || inHumd >= MAX_HUMID || inTemp >= MAX_TEMP)
       {
