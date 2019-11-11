@@ -5,15 +5,18 @@
 #include <MicroGear.h>
 
 // connect to netpie
-const char *ssid = "iMac";
-const char *password = "123456789";
+// const char *ssid = "iMac";
+// const char *password = "123456789";
+const char *ssid = "Guest.Conference";
+const char *password = "ceitap123";
 
-#define APPID "MicroControllerProject2019"
-#define KEY "100XO3wHljyk0Ne"
-#define SECRET "ML5N1lnw0K2jyZXNFvNlzWE70"
+#define APPID "SMARTMELON"
+#define KEY "h2qfmSSoDABtXv6"
+#define SECRET "ThJoHwtrBYIgUCw5lhv62ROsM"
 
-#define ALIAS "NodeMCU1"
-#define FEEDID "Melon"
+#define ALIAS "NodeMCU"
+#define FEEDID "SMARTMELONFEED"
+#define FREEBOARDID "SMARTMELONFREEBOARD"
 
 #define INTERVAL 15000
 #define T_INCREMENT 200
@@ -25,7 +28,7 @@ const char *password = "123456789";
 WiFiClient client;
 
 int timer = 0;
-char str[32];
+char str[128];
 
 MicroGear microgear(client);
 
@@ -90,6 +93,7 @@ void setup()
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  digitalWrite(D0, LOW);
 
   microgear.init(KEY, SECRET, ALIAS);
   microgear.connect(APPID);
@@ -204,23 +208,38 @@ void netpieCon()
 {
   if (microgear.connected())
   {
-    Serial.print("*");
+    Serial.print("Connected");
     microgear.loop();
     if (timer >= INTERVAL)
     {
+      // communications function
+      communi();
       // Sending to the Feed
-      String data = "{\"humid\":";
+      String data = "{\"inHumd\":";
       data += inHumd;
-      data += ", \"temp\":";
+      data += ", \"inTemp\":";
       data += inTemp;
-      data += ", \"light\":";
+      data += ", \"inLight\":";
       data += inLight;
+      data = "{\"outHumd\":";
+      data += outHumd;
+      data += ", \"outTemp\":";
+      data += outTemp;
+      data += ", \"outLight\":";
+      data += outLight;
+      data = "{\"mois1\":";
+      data += mois0;
+      data += ", \"mois2\":";
+      data += mois1;
+      data += ", \"mois3\":";
+      data += mois2;
       data += "}";
 
+
       // Showing Gauage on Freeboard
-      String str = (String)inHumd + ", " + (String)inTemp + ", " + (String)inLight + ", ";
-      microgear.publish("/dht", str);
-      Serial.println(str);
+      // String str = (String)inHumd + ", " + (String)inTemp + ", " + (String)inLight + ", " + (String)outHumd + ", " + (String)outTemp + ", " + (String)outLight + ", " + (String)mois0 + ", " + (String)mois1 + ", " + (String)mois2 + ", ";
+      // microgear.publish(FREEBOARDID, str);
+      // Serial.println(str);
 
       if (isnan(inHumd) || isnan(inTemp) || inHumd >= MAX_HUMID || inTemp >= MAX_TEMP)
       {
@@ -290,5 +309,5 @@ void debuging()
   Serial.println("\t|\t");
   Serial.println("----------------------------------------------------------------------------------------------------------------- \n\n");
 
-  delay(2000);
+  //delay(2000);
 }

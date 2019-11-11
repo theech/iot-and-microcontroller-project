@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "DHT.h"
 #include <Adafruit_Sensor.h>
+#include "Wire.h"
+#include <Adafruit_LiquidCrystal.h>
 // what digital pin we're connected to
 #define inDHT 8
 #define outDHT 9
@@ -47,12 +49,15 @@ String strMois2;
 // as the current DHT reading algorithm adjusts itself to work on faster procs.
 DHT dht1(inDHT, inDHTTYPE);
 DHT dht2(outDHT, outDHTTYPE);
-
+// initialize the library with the numbers of the interface pins
+Adafruit_LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+int Contrast = 125;
 //calling function
 void humidTemp();
 void photoresis();
 void soilMoisture();
 void comnuni();
+void LCDSetup();
 
 void setup()
 {
@@ -83,6 +88,8 @@ void loop()
   soilMoisture();
   // show in Nodemcu by serial Monitor as realtime
   comnuni();
+  // LCD Disply
+  LCDSetup();
 }
 
 // humidity and Temperature function
@@ -197,4 +204,30 @@ void comnuni()
   Serial1.println(strMois0);
   Serial1.println(strMois1);
   Serial1.println(strMois2);
+}
+
+void LCDSetup() {
+    analogWrite(6, Contrast);
+    lcd.begin(20, 4);
+    lcd.setCursor(0, 0);
+    lcd.print("IH:");
+    lcd.print(inHumdStatus);
+    lcd.print("  IT:");
+    lcd.print(inTempStatus);
+    lcd.print("  IL:");
+    lcd.print(inLightStatus);
+    lcd.setCursor(0, 1);
+    lcd.print("OH:");
+    lcd.print(outHumdStatus);
+    lcd.print("  OT:");
+    lcd.print(outTempStatus);
+    lcd.print("  OL:");
+    lcd.print(outLightStatus);
+    lcd.setCursor(0, 2);
+    lcd.print("S1:");
+    lcd.print(moisStatus0);
+    lcd.print(" S2:");
+    lcd.print(moisStatus1);
+    lcd.print(" S3:");
+    lcd.print(moisStatus2);
 }
