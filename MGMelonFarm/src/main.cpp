@@ -27,6 +27,8 @@ int outTempStatus = 0;
 // inLightStaus and outLightStatus are Read value from sensor directly.
 int inLightStatus = 0;
 int outLightStatus = 0;
+int inLightPercent;
+int outLightPercent;
 // Standard photoresistor value is 1024 that mean it will start from 0 to 1023
 int lightMin = 0;
 int lightMax = 1023;
@@ -141,21 +143,20 @@ void photoresis()
   inLightStatus = analogRead(inLight);
   outLightStatus = analogRead(outLight);
   // if inLightStatus is less than 0, set it equal 0, but if greater than 1023 set it equal 1023
-  if (inLightStatus < lightMin)
-    inLightStatus = lightMin;
-  else if (inLightStatus > lightMax)
-    inLightStatus = lightMax;
+  if (inLightStatus < lightMin) inLightStatus = lightMin;
+  else if (inLightStatus > lightMax) inLightStatus = lightMax;
   // if outLightstatus is less than 0, set it equal 0, but if greater than 1023, set it equal 1023
-  if (outLightStatus < lightMin)
-    outLightStatus = lightMin;
-  else if (outLightStatus > lightMax)
-    outLightStatus = lightMax;
+  if (outLightStatus < lightMin) outLightStatus = lightMin;
+  else if (outLightStatus > lightMax) outLightStatus = lightMax;
+  // calculate to %
+  inLightPercent = (inLightStatus / 1023.0 * 100.0);
+  outLightPercent = (outLightStatus / 1023.0 * 100.0); 
   // showing status in monitor
   Serial.print("Inside Light: \t\t");
-  Serial.print(inLightStatus);
-  Serial.print("\t|\tOutside Light: \t\t");
-  Serial.print(outLightStatus);
-  Serial.println("\t|");
+  Serial.print(inLightPercent);
+  Serial.print(" %\t|\tOutside Light: \t\t");
+  Serial.print(outLightPercent);
+  Serial.println(" %\t|");
   Serial.println("------------------------------------------------------------------------");
 }
 
@@ -163,20 +164,20 @@ void photoresis()
 void soilMoisture()
 {
   // reading data from each moisture sensors directly
-  moisStatus0 = analogRead(moisPin0);
-  moisStatus1 = analogRead(moisPin1);
-  moisStatus2 = analogRead(moisPin2);
+  moisStatus0 = (analogRead(moisPin0) / 1024.0) * 100.0;
+  moisStatus1 = (analogRead(moisPin1) / 1024.0) * 100.0;
+  moisStatus2 = (analogRead(moisPin2) / 1024.0) * 100.0;
 
   // showing each moisture sensors to screen
   Serial.print("Soil moisture one \t");
   Serial.print(moisStatus0);
-  Serial.print("\t|\t");
+  Serial.print(" %\t|\t");
   Serial.print("Soil moisture two \t");
   Serial.print(moisStatus1);
-  Serial.print("\t|\t");
+  Serial.print(" %\t|\t");
   Serial.print("Soil moisture three \t");
   Serial.print(moisStatus2);
-  Serial.println("\t|\t");
+  Serial.println(" %\t|\t");
   Serial.println("----------------------------------------------------------------------------------------------------------------- \n\n");
 }
 
@@ -193,8 +194,8 @@ void comnuni()
   Serial1.println(strOutH);
   Serial1.println(strOutT);
   // in and out light communication sending string
-  strInLig = String('L') + String(inLightStatus);
-  strOutLig = String('M') + String(outLightStatus);
+  strInLig = String('L') + String(inLightPercent);
+  strOutLig = String('M') + String(outLightPercent);
   Serial1.println(strInLig);
   Serial1.println(strOutLig);
   //mois 1, 2, and 3 communication sending string

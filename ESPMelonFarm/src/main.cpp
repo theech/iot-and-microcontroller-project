@@ -4,12 +4,6 @@
 #include <SoftwareSerial.h>
 #include <MicroGear.h>
 
-// connect to netpie
-// const char *ssid = "iMac";
-// const char *password = "123456789";
-const char *ssid = "Guest.Conference";
-const char *password = "ceitap123";
-
 #define APPID "SMARTMELON"
 #define KEY "h2qfmSSoDABtXv6"
 #define SECRET "ThJoHwtrBYIgUCw5lhv62ROsM"
@@ -28,7 +22,7 @@ const char *password = "ceitap123";
 WiFiClient client;
 
 int timer = 0;
-char str[128];
+char str[64];
 
 MicroGear microgear(client);
 
@@ -220,13 +214,13 @@ void netpieCon()
       data += inTemp;
       data += ", \"inLight\":";
       data += inLight;
-      data = "{\"outHumd\":";
+      data += ", \"outHumd\":";
       data += outHumd;
       data += ", \"outTemp\":";
       data += outTemp;
       data += ", \"outLight\":";
       data += outLight;
-      data = "{\"mois1\":";
+      data += ", \"mois1\":";
       data += mois0;
       data += ", \"mois2\":";
       data += mois1;
@@ -236,7 +230,7 @@ void netpieCon()
 
       //sending data to freeboard
       String str = (String)inHumd + ", " + (String)inTemp + ", " + (String)inLight + ", " + (String)outHumd + ", " + (String)outTemp + ", " + (String)outLight + ", " + (String)mois0 + ", " + (String)mois1 + ", " + (String)mois2 + ", ";
-      microgear.publish("/sensors",str);
+      microgear.publish("/sensors", str);
       Serial.println(str);
 
       if (isnan(inHumd) || isnan(inTemp) || inHumd >= MAX_HUMID || inTemp >= MAX_TEMP)
@@ -291,20 +285,20 @@ void debuging()
   // showing status in monitor
   Serial.print("Inside Light: \t\t");
   Serial.print(inLight);
-  Serial.print("\t|\tOutside Light: \t\t");
+  Serial.print(" %\t|\tOutside Light: \t\t");
   Serial.print(outLight);
-  Serial.println("\t|");
+  Serial.println(" %\t|");
   Serial.println("------------------------------------------------------------------------");
   // showing each moisture sensors to screen
   Serial.print("Soil moisture one \t");
   Serial.print(mois0);
-  Serial.print("\t|\t");
+  Serial.print(" %\t|\t");
   Serial.print("Soil moisture two \t");
   Serial.print(mois1);
-  Serial.print("\t|\t");
+  Serial.print(" %\t|\t");
   Serial.print("Soil moisture three \t");
   Serial.print(mois2);
-  Serial.println("\t|\t");
+  Serial.println(" %\t|\t");
   Serial.println("----------------------------------------------------------------------------------------------------------------- \n\n");
 
   //delay(2000);
