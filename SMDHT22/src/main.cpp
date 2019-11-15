@@ -1,9 +1,16 @@
+/* 
+### Title : 2 DHT22 Modules "Arduino"
+### Author: Tee Hunter
+### Date  : Nov 15 2019
+### Tools : PlatformIO
+*/
+
 #include <Arduino.h>
 #include "DHT.h"
 #include <Adafruit_Sensor.h>
 #include <SoftwareSerial.h>
 
-// what digital pin we're connected to
+// it depends on what digital pin you're connected to?
 #define inDHT 8
 #define outDHT 9
 
