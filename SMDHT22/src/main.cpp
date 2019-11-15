@@ -64,7 +64,7 @@ void loop()
   // Read temperature as Fahrenheit (isFahrenheit = true)
   //float f = dht1.readTemperature(true);
 
-  // Check if any reads failed and exit early (to try again).
+  //Check if any reads failed and exit early (to try again).
   if (isnan(inHumdStatus) || isnan(inTempStatus))
   {
     Serial.println("Failed to read from Inside DHT22 sensor!");
