@@ -4,6 +4,14 @@
 #include <SoftwareSerial.h>
 #include <MicroGear.h>
 
+// connect to netpie
+// const char *ssid = "iMac";
+// const char *password = "123456789";
+// const char *ssid = "Guest.Conference";
+// const char *password = "ceitap123";
+const char *ssid = "CEIT ROBOT";
+const char *password = "EndGame123";
+
 #define APPID "SMARTMELON"
 #define KEY "h2qfmSSoDABtXv6"
 #define SECRET "ThJoHwtrBYIgUCw5lhv62ROsM"
@@ -19,7 +27,16 @@
 #define MAX_TEMP 100
 #define MAX_HUMID 100
 
+//Solenoid digital pin
+#define SOLENOID D1
+
 WiFiClient client;
+
+// Solenoid variable
+char state = 0;
+char stateOutdated = 0;
+char buff[16];
+char solenStatus;
 
 int timer = 0;
 char str[64];
@@ -30,19 +47,60 @@ MicroGear microgear(client);
 
 SoftwareSerial swSer(14, 12, false, 256); // 14 = D5(RX) ; 12 = D6(TX) NodeMCU
 
+// sending solenoid state
+void sendState()
+{
+  if (state == 0)
+    microgear.publish("/solenoid/state", "0");
+  else
+    microgear.publish("/solenoid/state", "1");
+  Serial.println("send state..");
+  stateOutdated = 0;
+}
+
+// update solenoid state
+void updateIO()
+{
+  if (state >= 1)
+  {
+    digitalWrite(SOLENOID, HIGH);
+  }
+  else
+  {
+    state = 0;
+    digitalWrite(SOLENOID, LOW);
+  }
+}
+
 // when the other thing send a msg to this board
 void onMsghandler(char *topic, uint8_t *msg, unsigned int msglen)
 {
+  solenStatus = *(char *)msg;
+
   Serial.print("Incoming message --> ");
   msg[msglen] = '\0';
   Serial.println((char *)msg);
+
+  if (solenStatus == '0' || solenStatus == '1')
+  {
+    state = solenStatus == '0' ? 0 : 1;
+    updateIO();
+  }
+  if (solenStatus == '0' || solenStatus == '1' || solenStatus == '?')
+    stateOutdated = 1;
 }
 
 void onConnected(char *attribute, uint8_t *msg, unsigned int msglen)
 {
   Serial.println("Connected to NETPIE...");
   microgear.setAlias(ALIAS);
+  stateOutdated = 1;
 }
+
+// call function
+void communi();
+void netpieCon();
+void debuging();
 
 String MyinputString = "";
 char inChar;
@@ -58,11 +116,6 @@ int mois0 = 0;
 int mois1 = 0;
 int mois2 = 0;
 
-// call function
-void communi();
-void netpieCon();
-void debuging();
-
 void setup()
 {
   // Open serial communications and wait for port to open:
@@ -71,9 +124,8 @@ void setup()
   Serial.println("Starting...");
   swSer.begin(BAUD_RATE);
 
-  // netpie setup
-  microgear.on(MESSAGE, onMsghandler);
-  microgear.on(CONNECTED, onConnected);
+  // solenoid pinMode
+  pinMode(SOLENOID, OUTPUT);
 
   if (WiFi.begin(ssid, password))
   {
@@ -88,6 +140,9 @@ void setup()
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
+  // netpie setup
+  microgear.on(MESSAGE, onMsghandler);
+  microgear.on(CONNECTED, onConnected);
   microgear.init(KEY, SECRET, ALIAS);
   microgear.connect(APPID);
 
@@ -201,7 +256,10 @@ void netpieCon()
 {
   if (microgear.connected())
   {
-    Serial.print("Connected");
+    //Serial.print("Connected");
+    // solenoid sending state
+    if (stateOutdated)
+      sendState();
     microgear.loop();
     if (timer >= INTERVAL)
     {
@@ -231,7 +289,7 @@ void netpieCon()
       //sending data to freeboard
       String str = (String)inHumd + ", " + (String)inTemp + ", " + (String)inLight + ", " + (String)outHumd + ", " + (String)outTemp + ", " + (String)outLight + ", " + (String)mois0 + ", " + (String)mois1 + ", " + (String)mois2 + ", ";
       microgear.publish("/sensors", str);
-      Serial.println(str);
+      //Serial.println(str);
 
       if (isnan(inHumd) || isnan(inTemp) || inHumd >= MAX_HUMID || inTemp >= MAX_TEMP)
       {
@@ -239,8 +297,8 @@ void netpieCon()
       }
       else
       {
-        Serial.print("Sending -->");
-        Serial.println((char *)data.c_str());
+        //Serial.print("Sending -->");
+        //Serial.println((char *)data.c_str());
         microgear.writeFeed(FEEDID, data); //YOUR  FEED ID, API KEY
       }
       timer = 0;
@@ -290,16 +348,28 @@ void debuging()
   Serial.println(" %\t|");
   Serial.println("------------------------------------------------------------------------");
   // showing each moisture sensors to screen
-  Serial.print("Soil moisture one \t");
+  Serial.print("Soil moisture one: \t");
   Serial.print(mois0);
   Serial.print(" %\t|\t");
-  Serial.print("Soil moisture two \t");
+  Serial.print("Soil moisture two: \t");
   Serial.print(mois1);
   Serial.print(" %\t|\t");
-  Serial.print("Soil moisture three \t");
+  Serial.print("Soil moisture three: \t");
   Serial.print(mois2);
   Serial.println(" %\t|\t");
-  Serial.println("----------------------------------------------------------------------------------------------------------------- \n\n");
+  Serial.println("-----------------------------------------------------------------------------------------------------------------");
+  //showing solenoid state
+  if (solenStatus == '1')
+  {
+    Serial.print("Solenoid: \t\tON");
+    Serial.print(" \t|\n");
+  }
+  else
+  {
+    Serial.print("Solenoid: \t\tOFF");
+    Serial.print(" \t|\n");
+  }
+  Serial.println("-----------------------------------------------------------------------------------------------------------------\n\n");
 
   //delay(2000);
 }
