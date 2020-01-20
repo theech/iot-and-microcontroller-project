@@ -2,12 +2,10 @@
 #include "DHT.h"
 #include <Adafruit_Sensor.h>
 #include "Wire.h"
-#include <Keypad.h>
-#include <LiquidCrystal_I2C.h>
-
+#include <Adafruit_LiquidCrystal.h>
 // what digital pin we're connected to
-#define inDHT 10
-#define outDHT 11
+#define inDHT 8
+#define outDHT 9
 // Uncomment whatever type you're using!
 //#define DHTTYPE DHT11   // DHT 11
 #define inDHTTYPE DHT22 // DHT 22  (AM2302), AM2321
@@ -21,16 +19,12 @@
 #define moisPin0 A0
 #define moisPin1 A1
 #define moisPin2 A2
-// define keypad row and column
-const byte ROWS = 4;
-const byte COLS = 4;
-char hexaKeys[ROWS][COLS] = {
-    {'1', '2', '3', 'A'},
-    {'4', '5', '6', 'B'},
-    {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}};
-byte rowPins[ROWS] = {5, 4, 3, 2};
-byte colPins[COLS] = {9, 8, 7, 6};
+// water flow sensor
+//measuring the rising edges of the signal
+volatile int NbTopsFan;
+// define water flow sensor
+#define WTPin 2
+int WTquanti;
 // Define status variable to stall the realtime data from inDHT & outDHT
 int inHumdStatus = 0;
 int outHumdStatus = 0;
@@ -48,8 +42,6 @@ int lightMax = 1023;
 int moisStatus0 = 0;
 int moisStatus1 = 0;
 int moisStatus2 = 0;
-// standart soil moisture
-char numSta[8] = "50";
 // Sending str to Nodemcu
 // String str;
 // Communication String
@@ -62,20 +54,19 @@ String strOutLig;
 String strMois0;
 String strMois1;
 String strMois2;
+String strWtflow;
 // as the current DHT reading algorithm adjusts itself to work on faster procs.
 DHT dht1(inDHT, inDHTTYPE);
 DHT dht2(outDHT, outDHTTYPE);
-// keypad map the key
-Keypad keypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 // initialize the library with the numbers of the interface pins
-//Adafruit_LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-LiquidCrystal_I2C lcd(0x27, 20, 4); // set the LCD address to 0x27 for a 16 chars and 2 line display
+Adafruit_LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 int Contrast = 125;
 //calling function
-void keyPad();
 void humidTemp();
 void photoresis();
 void soilMoisture();
+void rpm();
+void wtflow();
 void comnuni();
 void LCDSetup();
 
@@ -84,8 +75,6 @@ void setup()
   Serial.begin(115200);
   Serial1.begin(115200);
   Serial.println("Smart Melon Farm [MEGE]");
-  lcd.backlight();
-  lcd.init(); // initialize the lcd
   // DHT22 begin
   dht1.begin();
   dht2.begin();
@@ -96,68 +85,27 @@ void setup()
   pinMode(moisPin0, INPUT);
   pinMode(moisPin1, INPUT);
   pinMode(moisPin2, INPUT);
+  // inform the MCU that water flow sensor
+  pinMode(WTPin, INPUT);
+  attachInterrupt(0, rpm, RISING); //and the interrupt is attached
 }
 
 void loop()
 {
+  // Wait a few seconds between measurements.
+  delay(2000);
   // humidity and Temperature
   humidTemp();
   // photoresistor
   photoresis();
   // soil Moisture
   soilMoisture();
+  // water flow sensor
+  wtflow();
   // show in Nodemcu by serial Monitor as realtime
   comnuni();
   // LCD Disply
   LCDSetup();
-  // keypad setup
-  keyPad();
-  // Wait a few seconds between measurements.
-  //delay(2000);
-}
-
-// keypad function
-void keyPad(){
-  char key = keypad.getKey();
-  if (key == '*')
-  {
-    lcd.clear();
-    do
-    {
-      lcd.setCursor(1, 0);
-      lcd.print("*SMART MELON FARM*");
-      lcd.setCursor(4, 1);
-      lcd.print("SET SOIL:");
-      lcd.setCursor(13, 1);
-      lcd.print(numSta);
-      lcd.setCursor(1, 2);
-      lcd.print("CONFIRM PRESS [#]");
-      lcd.setCursor(2, 3);
-      lcd.print("RESET PRESS  [A]");
-
-      if (key == '0' || key == '1' || key == '2' || key == '3' || key == '4' || key == '5' || key == '6' || key == '7' || key == '8' || key == '9')
-      {
-        if (strlen(numSta) <= 2)
-        {
-          int num = +strlen(numSta);
-          numSta[num] = key;
-        }
-        else
-        {
-          memset(numSta, 0, sizeof(numSta));
-        }
-      }
-      else if (key == 'A')
-      {
-        memset(numSta, 0, sizeof(numSta));
-        Serial.println("RESET");
-        lcd.setCursor(13, 1);
-        lcd.print("   ");
-      }
-      key = keypad.getKey();
-    } while (key != '#');
-    lcd.clear();
-  }
 }
 
 // humidity and Temperature function
@@ -248,10 +196,28 @@ void soilMoisture()
   Serial.print("Soil moisture three \t");
   Serial.print(moisStatus2);
   Serial.println(" %\t|\t");
-  Serial.println("-----------------------------------------------------------------------------------------------------------------");
-  // standard soil number
-  Serial.print("Standardi soil: ");
-  Serial.println(numSta);
+  Serial.println("----------------------------------------------------------------------------------------------------------------- ");
+}
+
+// water flow sensor rpm function
+void rpm() //This is the function that the interupt calls
+{
+  NbTopsFan++; //This function measures the rising and falling edge of the hall effect sensors signal
+}
+
+// water flow calculate function
+void wtflow()
+{
+  delay(2000);
+  NbTopsFan = 0;  //Set NbTops to 0 ready for calculations
+  sei();          //Enables interrupts
+  delay(10);      //Wait 1 second
+  cli();          //Disable interrupts
+  WTquanti = (NbTopsFan * 60 / 7.5); //(Pulse frequency x 60) / 7.5Q, = flow rate in L/hour
+
+  Serial.print("Water flow Sensor \t");
+  Serial.print(WTquanti, DEC); //Prints the number calculated above
+  Serial.println(" L/h\t|\t"); //Prints "L/hour" and returns a  new line
   Serial.println("----------------------------------------------------------------------------------------------------------------- \n\n");
 }
 
@@ -272,47 +238,41 @@ void comnuni()
   strOutLig = String('M') + String(outLightPercent);
   Serial1.println(strInLig);
   Serial1.println(strOutLig);
-  //mois 1, 2, and 3 communication sending string
+  // mois 1, 2, and 3 communication sending string
   strMois0 = String('N') + String(moisStatus0);
   strMois1 = String('O') + String(moisStatus1);
   strMois2 = String('P') + String(moisStatus2);
   Serial1.println(strMois0);
   Serial1.println(strMois1);
   Serial1.println(strMois2);
+  // water flow sensor communication sending string
+  strWtflow = String('Q') + String(WTquanti);
+  Serial1.println(strWtflow);
 }
 
 void LCDSetup()
 {
+  analogWrite(6, Contrast);
   lcd.begin(20, 4);
   lcd.setCursor(0, 0);
   lcd.print("IH:");
   lcd.print(inHumdStatus);
-  lcd.setCursor(7, 0);
-  lcd.print("IT:");
+  lcd.print("  IT:");
   lcd.print(inTempStatus);
-  lcd.setCursor(14, 0);
-  lcd.print("IL:");
+  lcd.print("  IL:");
   lcd.print(inLightStatus);
   lcd.setCursor(0, 1);
   lcd.print("OH:");
   lcd.print(outHumdStatus);
-  lcd.setCursor(7, 1);
-  lcd.print("OT:");
+  lcd.print("  OT:");
   lcd.print(outTempStatus);
-  lcd.setCursor(14, 1);
-  lcd.print("OL:");
+  lcd.print("  OL:");
   lcd.print(outLightStatus);
   lcd.setCursor(0, 2);
   lcd.print("S1:");
   lcd.print(moisStatus0);
-  lcd.setCursor(7, 2);
-  lcd.print("S2:");
+  lcd.print(" S2:");
   lcd.print(moisStatus1);
-  lcd.setCursor(14, 2);
-  lcd.print("S3:");
+  lcd.print(" S3:");
   lcd.print(moisStatus2);
-  lcd.setCursor(0, 3);
-  lcd.print("METER:24L/H");
-  lcd.setCursor(12, 3);
-  lcd.print("PUMP:OFF");
 }
