@@ -4,8 +4,6 @@
 #include <SoftwareSerial.h>
 #include <MicroGear.h>
 
-SoftwareSerial swSer;
-
 const char *ssid = "Guest.Conference";
 const char *password = "ceitap123";
 
@@ -38,48 +36,14 @@ char solenStatus;
 int timer = 0;
 char str[64];
 
-String MyinputString = "";
-char inChar;
-
-// in and out humd, temp variable
-int inHumd = 0;
-int inTemp = 0;
-int outHumd = 0;
-int outTemp = 0;
-int inLight = 0;
-int outLight = 0;
-int mois0 = 0;
-int mois1 = 0;
-int mois2 = 0;
-int standNum = 0;
-int avgMois = 0;
-
 MicroGear microgear(client);
 
-// sending solenoid state
-void sendState()
-{
-  if (state == 0)
-    microgear.publish("/solenoid/state", "0");
-  else
-    microgear.publish("/solenoid/state", "1");
-  Serial.println("send state..");
-  stateOutdated = 0;
-}
+#define BAUD_RATE 115200
 
-// update solenoid state
-void updateIO()
-{
-  if (state >= 1)
-  {
-    digitalWrite(SOLENOID, HIGH);
-  }
-  else
-  {
-    state = 0;
-    digitalWrite(SOLENOID, LOW);
-  }
-}
+SoftwareSerial swSer(14, 12, false, 256); // 14 = D5(RX) ; 12 = D6(TX) NodeMCU
+
+void sendState(); // calling send state function
+void updateIO();  // calling update I/O function
 
 // when the other thing send a msg to this board
 void onMsghandler(char *topic, uint8_t *msg, unsigned int msglen)
@@ -109,15 +73,32 @@ void onConnected(char *attribute, uint8_t *msg, unsigned int msglen)
 // call function
 void communi();
 void netpieCon();
-void avg();
 void debuging();
+
+String MyinputString = "";
+char inChar;
+
+// in and out humd, temp variable
+int inHumd = 0;
+int inTemp = 0;
+int outHumd = 0;
+int outTemp = 0;
+int inLight = 0;
+int outLight = 0;
+int mois0 = 0;
+int mois1 = 0;
+int mois2 = 0;
+int standNum = 0;
+
+int standardMois = 0;
+
 void setup()
 {
   // Open serial communications and wait for port to open:
   Serial.begin(115200);
   Serial.println("Smart Melon Farm [NODE]");
   Serial.println("Starting...");
-  swSer.begin(115200, SWSERIAL_8N1, 14, 12, false, 256);
+  swSer.begin(BAUD_RATE);
 
   // solenoid pinMode
   pinMode(SOLENOID, OUTPUT);
@@ -150,30 +131,39 @@ void setup()
 
 void loop()
 { // run over and over
+
+  standardMois = (mois0 + mois1 + mois2) / 3;
+
   // communications with arduino MEGA
   communi();
   // connect to netpie
   netpieCon();
-  // average soil moisture
-  avg();
   // print to serial monitor
-  //debuging();
+  debuging();
+}
 
-  if (state >= 1)
+// sending solenoid state
+void sendState()
+{
+  if (state == 0)
+    microgear.publish("/solenoid/state", "0");
+  else
+    microgear.publish("/solenoid/state", "1");
+  Serial.println("send state..");
+  stateOutdated = 0;
+}
+
+// update solenoid state
+void updateIO()
+{
+  if (state >= 1 || standardMois >= 50)
   {
     digitalWrite(SOLENOID, HIGH);
-    //Serial.println("State is 1");
-  }
-  else if (avgMois <= standNum)
-  {
-    digitalWrite(SOLENOID, HIGH);
-    //Serial.println("average");
   }
   else
   {
     state = 0;
     digitalWrite(SOLENOID, LOW);
-    //Serial.println("State is 0");
   }
 }
 
@@ -258,7 +248,7 @@ void communi()
         MyinputString = "";
       }
     }
-    else if (MyinputString[0] == 'Q') // check array [0] is P
+    else if (MyinputString[0] == 'P') // check array [0] is P
     {
       if (inChar == 0x0D) // check received 'enter' (0x0D)
       {
@@ -310,7 +300,7 @@ void netpieCon()
 
       //sending data to freeboard
       String str = (String)inHumd + ", " + (String)inTemp + ", " + (String)inLight + ", " + (String)outHumd + ", " + (String)outTemp + ", " + (String)outLight + ", " + (String)mois0 + ", " + (String)mois1 + ", " + (String)mois2 + ", ";
-      microgear.publish("/sensors", str);
+      microgear.publish("/env/sensors", str);
       //Serial.println(str);
 
       if (isnan(inHumd) || isnan(inTemp) || inHumd >= MAX_HUMID || inTemp >= MAX_TEMP)
@@ -340,12 +330,6 @@ void netpieCon()
       timer += T_INCREMENT;
   }
   delay(200);
-}
-
-// average soil moisture
-void avg()
-{
-  avgMois = (mois0 + mois1 + mois2) / 3;
 }
 
 // debuging monitor
@@ -386,15 +370,11 @@ void debuging()
   Serial.print(mois2);
   Serial.println(" %\t|\t");
   Serial.println("-----------------------------------------------------------------------------------------------------------------");
-  // show solenoid standard number
-  Serial.print("standNum: \t\t");
-  Serial.print(standNum);
-  Serial.print(" %\t|\t");
-  Serial.print("Average moisture: \t");
-  Serial.print(avgMois);
-  Serial.println(" %\t|\t");
-
-  // showing solenoid state
+  // show standard soil number
+  Serial.print("Standard soil: ");
+  Serial.println(standNum);
+  Serial.println("-----------------------------------------------------------------------------------------------------------------");
+  //showing solenoid state
   if (solenStatus == '1')
   {
     Serial.print("Solenoid: \t\tON");
@@ -406,4 +386,6 @@ void debuging()
     Serial.print(" \t|\n");
   }
   Serial.println("-----------------------------------------------------------------------------------------------------------------\n\n");
+
+  //delay(2000);
 }

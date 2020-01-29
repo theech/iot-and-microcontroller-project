@@ -4,6 +4,9 @@
 #include "Wire.h"
 #include <Keypad.h>
 #include <LiquidCrystal_I2C.h>
+#include <SoftwareSerial.h>
+
+SoftwareSerial mySerial(19, 18); // RX, TX (Arduin Uno)
 
 // what digital pin we're connected to
 #define inDHT 10
@@ -49,7 +52,7 @@ int moisStatus0 = 0;
 int moisStatus1 = 0;
 int moisStatus2 = 0;
 // standart soil moisture
-char numSta[8] = "50";
+char standNum[8] = "50";
 // Sending str to Nodemcu
 // String str;
 // Communication String
@@ -62,6 +65,7 @@ String strOutLig;
 String strMois0;
 String strMois1;
 String strMois2;
+String strStandNum;
 // as the current DHT reading algorithm adjusts itself to work on faster procs.
 DHT dht1(inDHT, inDHTTYPE);
 DHT dht2(outDHT, outDHTTYPE);
@@ -117,7 +121,8 @@ void loop()
 }
 
 // keypad function
-void keyPad(){
+void keyPad()
+{
   char key = keypad.getKey();
   if (key == '*')
   {
@@ -129,7 +134,7 @@ void keyPad(){
       lcd.setCursor(4, 1);
       lcd.print("SET SOIL:");
       lcd.setCursor(13, 1);
-      lcd.print(numSta);
+      lcd.print(standNum);
       lcd.setCursor(1, 2);
       lcd.print("CONFIRM PRESS [#]");
       lcd.setCursor(2, 3);
@@ -137,19 +142,19 @@ void keyPad(){
 
       if (key == '0' || key == '1' || key == '2' || key == '3' || key == '4' || key == '5' || key == '6' || key == '7' || key == '8' || key == '9')
       {
-        if (strlen(numSta) <= 2)
+        if (strlen(standNum) <= 2)
         {
-          int num = +strlen(numSta);
-          numSta[num] = key;
+          int num = +strlen(standNum);
+          standNum[num] = key;
         }
         else
         {
-          memset(numSta, 0, sizeof(numSta));
+          memset(standNum, 0, sizeof(standNum));
         }
       }
       else if (key == 'A')
       {
-        memset(numSta, 0, sizeof(numSta));
+        memset(standNum, 0, sizeof(standNum));
         Serial.println("RESET");
         lcd.setCursor(13, 1);
         lcd.print("   ");
@@ -251,7 +256,7 @@ void soilMoisture()
   Serial.println("-----------------------------------------------------------------------------------------------------------------");
   // standard soil number
   Serial.print("Standardi soil: ");
-  Serial.println(numSta);
+  Serial.println(standNum);
   Serial.println("----------------------------------------------------------------------------------------------------------------- \n\n");
 }
 
@@ -272,13 +277,16 @@ void comnuni()
   strOutLig = String('M') + String(outLightPercent);
   Serial1.println(strInLig);
   Serial1.println(strOutLig);
-  //mois 1, 2, and 3 communication sending string
+  // mois 1, 2, and 3 communication sending string
   strMois0 = String('N') + String(moisStatus0);
   strMois1 = String('O') + String(moisStatus1);
   strMois2 = String('P') + String(moisStatus2);
   Serial1.println(strMois0);
   Serial1.println(strMois1);
   Serial1.println(strMois2);
+  // standard soil number
+  strStandNum = String('Q') + String(standNum);
+  Serial1.println(strStandNum);
 }
 
 void LCDSetup()

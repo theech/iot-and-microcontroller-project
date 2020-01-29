@@ -4,12 +4,12 @@
 #include <ESP8266WiFi.h>
 #include <MicroGear.h>
 
-const char* ssid     = <iMac>;
-const char* password = <123456789>;
+const char* ssid     = "iMac";
+const char* password = "123456789";
 
-#define APPID   <APPID>
-#define KEY     <APPKEY>
-#define SECRET  <APPSECRET>
+#define APPID   "APPID"
+#define KEY     "APPKEY"
+#define SECRET  "APPSECRET"
 #define ALIAS   "esp8266"
 
 WiFiClient client;
